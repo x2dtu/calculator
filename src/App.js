@@ -1,5 +1,5 @@
 import { FaBackspace, FaClock } from "react-icons/fa";
-import { useReducer, useState, useRef } from "react";
+import { useReducer, useState, useRef, useEffect } from "react";
 import DigitButton from "./components/DigitButton";
 import OperationButton from "./components/OperationButton";
 import ConstantButton from "./components/ConstantButton";
@@ -849,6 +849,120 @@ function App() {
   const [isRad, setRad] = useState(true);
   const [isHistory, setIsHistory] = useState(false);
   let propKey = useRef(0); // for unique keys for history children
+  let previousKeys = useRef([]);
+
+  useEffect(() => {
+    const onKeyStroke = (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+      }
+      if (event.key === "=" || event.key === "Enter") {
+        dispatch({ type: ACTIONS.EVALUATE, payload: { isRadians: isRad } });
+      } else if (previousKeys.current.at(-1) === "(" && event.key === "-") {
+        dispatch({ type: ACTIONS.NEGATE, payload: { isRadians: isRad } });
+      } else if (event.key.match(/[0-9]/)) {
+        dispatch({
+          type: ACTIONS.ADD_DIGIT,
+          payload: { digit: event.key, isRadians: isRad },
+        });
+      } else if (event.key === "Backspace") {
+        dispatch({ type: ACTIONS.DEL_DIGIT, payload: { isRadians: isRad } });
+      } else if (event.key.match(/\+|x|-|\/|\^/)) {
+        dispatch({
+          type: ACTIONS.ADD_OPERATION,
+          payload: { operation: event.key },
+        });
+      } else if (event.key === "(" || event.key === ")") {
+        dispatch({ type: ACTIONS.PARENTHESIS });
+      } else if (event.key === "%" || event.key === "!") {
+        dispatch({
+          type: ACTIONS.PERCENT,
+          payload: { operation: event.key, isRadians: isRad },
+        });
+      } else if (
+        previousKeys.current.slice(-2).join("") === "si" &&
+        event.key === "n"
+      ) {
+        dispatch({
+          type: ACTIONS.SPECIAL_FUNC,
+          payload: {
+            func: "sin",
+            isRadians: isRad,
+          },
+        });
+      } else if (
+        previousKeys.current.slice(-2).join("") === "co" &&
+        event.key === "s"
+      ) {
+        dispatch({
+          type: ACTIONS.SPECIAL_FUNC,
+          payload: {
+            func: "cos",
+            isRadians: isRad,
+          },
+        });
+      } else if (
+        previousKeys.current.slice(-2).join("") === "ta" &&
+        event.key === "n"
+      ) {
+        dispatch({
+          type: ACTIONS.SPECIAL_FUNC,
+          payload: {
+            func: "tan",
+            isRadians: isRad,
+          },
+        });
+      } else if (
+        previousKeys.current.slice(-2).join("") === "lo" &&
+        event.key === "g"
+      ) {
+        dispatch({
+          type: ACTIONS.SPECIAL_FUNC,
+          payload: {
+            func: "log",
+            isRadians: isRad,
+          },
+        });
+      } else if (previousKeys.current.at(-1) === "l" && event.key === "n") {
+        dispatch({
+          type: ACTIONS.SPECIAL_FUNC,
+          payload: {
+            func: "ln",
+            isRadians: isRad,
+          },
+        });
+      } else if (
+        previousKeys.current.slice(-3).join("") === "sqr" &&
+        event.key === "t"
+      ) {
+        dispatch({
+          type: ACTIONS.SPECIAL_FUNC,
+          payload: {
+            func: "√",
+            isRadians: isRad,
+          },
+        });
+      } else if (event.key === "e") {
+        dispatch({
+          type: ACTIONS.ADD_CONSTANT,
+          payload: { symbol: "e", value: Math.E, isRadians: isRad },
+        });
+      } else if (previousKeys.current.at(-1) === "p" && event.key === "i") {
+        dispatch({
+          type: ACTIONS.ADD_CONSTANT,
+          payload: { symbol: "π", value: Math.PI, isRadians: isRad },
+        });
+      }
+      previousKeys.current.push(event.key);
+    };
+
+    window.addEventListener("keydown", onKeyStroke);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyStroke);
+      previousKeys.current = [];
+    };
+  }, [isRad]);
 
   return (
     <div className="container">
