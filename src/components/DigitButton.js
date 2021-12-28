@@ -1,6 +1,8 @@
-const DigitButton = ({ type, digit, dispatch }) => {
+const DigitButton = ({ type, digit, isRadians, dispatch }) => {
   return (
-    <button onClick={() => dispatch({ type: type, payload: { digit } })}>
+    <button
+      onClick={() => dispatch({ type: type, payload: { digit, isRadians } })}
+    >
       {digit}
     </button>
   );

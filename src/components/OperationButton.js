@@ -1,7 +1,7 @@
-const OperationButton = ({ type, operation, dispatch }) => {
+const OperationButton = ({ operation, className, type, dispatch }) => {
   return (
     <button
-      className="operand"
+      className={className}
       onClick={() => dispatch({ type: type, payload: { operation } })}
     >
       {operation}
