@@ -1,5 +1,5 @@
 import { FaBackspace, FaClock } from "react-icons/fa";
-import { useReducer, useState, useRef, useEffect } from "react";
+import { useReducer, useState, useRef } from "react";
 import DigitButton from "./components/DigitButton";
 import OperationButton from "./components/OperationButton";
 import ConstantButton from "./components/ConstantButton";
@@ -396,10 +396,8 @@ function add_digit(state, payload) {
   if (payload.digit === "." && state.values.at(-1).includes(".")) {
     return state;
   }
-
   if (
-    state.values.at(-1).includes("0") &&
-    !state.values.at(-1).includes(".") &&
+    (state.values.at(-1).match(/[0-9.]/) || []).join("") === "0" &&
     payload.digit !== "."
   ) {
     state.values[state.values.length - 1] = state.values
@@ -504,7 +502,6 @@ function del_digit(state, payload) {
     state.values[state.values.length - 1] = state.values.at(-1).slice(0, -1);
     state.problem = formatProblem(state.problem.slice(0, -2));
   } else {
-    console.log("subaru");
     // else, there was a single digit that we can delete, so delete the digit
     state.values[state.values.length - 1] = state.values.at(-1).slice(0, -1);
     state.problem = formatProblem(state.problem.slice(0, -1));
@@ -535,10 +532,18 @@ function evaluateProblem(state, isRadians) {
       const answerProblem = state.values[0]
         .replace(/\(/g, "")
         .replace(/\)/g, "");
-      const result = (answerProblem.match(/[0-9]/) || []).join("")
-        ? answerProblem
+      const resultWithoutMinuses = (answerProblem.match(/[0-9]/) || []).join("")
+        ? answerProblem.replace(/-/g, "")
         : "";
-      return result === "-0" ? "0" : result;
+      if (!resultWithoutMinuses) {
+        return "";
+      }
+      const numMinuses = (answerProblem.match(/-/g) || []).length;
+      const finalResult = (
+        Number(resultWithoutMinuses) *
+        (-1) ** numMinuses
+      ).toString();
+      return finalResult === "-0" ? "0" : finalResult;
     }
     if (state.problem.includes("π")) {
       return Math.PI + "";
@@ -562,7 +567,6 @@ function evaluateProblem(state, isRadians) {
     // We will make sure all the parentheses are closed
     balanceParentheses(finalList, true);
 
-    console.log(finalList);
     // if there are no parentheses then the indicies will be negative or invalid
     [leftParen, rightParen] = [-1, -1];
 
@@ -846,9 +850,6 @@ function App() {
   const [isHistory, setIsHistory] = useState(false);
   let propKey = useRef(0); // for unique keys for history children
 
-  useEffect(() => {
-    console.log(state);
-  });
   return (
     <div className="container">
       <div className="answerScreen">
