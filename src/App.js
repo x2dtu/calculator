@@ -160,6 +160,7 @@ function reducer(state, { type, payload }) {
         ...state,
         problem: state.problem + payload.operation,
         answer: formatProblem(evaluated),
+        hasEvaluated: false,
       };
     case ACTIONS.PARENTHESIS:
       // could do if (payload.isRight)
