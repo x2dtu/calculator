@@ -1,5 +1,5 @@
 import { FaBackspace, FaClock } from "react-icons/fa";
-import { useReducer, useState, useRef } from "react";
+import { useReducer, useState, useRef, useEffect } from "react";
 import DigitButton from "./components/DigitButton";
 import OperationButton from "./components/OperationButton";
 import ConstantButton from "./components/ConstantButton";
@@ -32,6 +32,17 @@ const INIT = {
   hasEvaluated: false,
   history: [],
 };
+
+/*
+ * Formats the state's problem, adding commas to the numbers
+ * whenever necesary
+ *
+ */
+function formatProblem(problem) {
+  problem = problem.replace(/,/g, ""); // remove all commas first
+  // then add them back
+  return problem.replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",");
+}
 
 /*
  * Reducer function for my useReducer
@@ -101,11 +112,6 @@ function reducer(state, { type, payload }) {
         return state;
       }
 
-      // if we have a single term with a constant like pi or e
-      if (state.answer && state.values.length === 1) {
-        answer = state.answer;
-      }
-
       // format the problem with correct number of right parentheses so
       // that it looks good in history
       let [leftCount, rightCount] = [0, 0];
@@ -122,8 +128,8 @@ function reducer(state, { type, payload }) {
       const oldState = {
         values: state.values,
         operations: state.operations,
-        problem: state.problem,
-        answer: "= " + state.answer,
+        problem: formatProblem(state.problem),
+        answer: "= " + formatProblem(state.answer),
       };
       // add old state if we are evaludated, but not if user has
       // already evaluated and hitting equals button a second time
@@ -133,7 +139,7 @@ function reducer(state, { type, payload }) {
 
       return {
         answer: "",
-        problem: answer,
+        problem: formatProblem(answer),
         values: [answer],
         hasEvaluated: true,
         history: state.history,
@@ -153,7 +159,7 @@ function reducer(state, { type, payload }) {
       return {
         ...state,
         problem: state.problem + payload.operation,
-        answer: evaluated,
+        answer: formatProblem(evaluated),
       };
     case ACTIONS.PARENTHESIS:
       // could do if (payload.isRight)
@@ -192,6 +198,7 @@ function reducer(state, { type, payload }) {
         return {
           ...state,
           answer: evaluateProblem(state, payload.isRadians),
+          hasEvaluated: false,
         };
       }
       const lastIndexValue = state.values.at(-1).lastIndexOf("(");
@@ -206,16 +213,19 @@ function reducer(state, { type, payload }) {
           "(-" +
           state.problem.slice(lastIndexProblem + 1);
       } else {
-        const indexOfLastParen = state.problem.lastIndexOf("(");
+        const indexOfLastValue = state.problem.lastIndexOf(
+          (state.values.at(-1).match(/[0-9.]+/) || []).join("")
+        );
         state.problem =
-          state.problem.slice(0, indexOfLastParen + 1) +
+          state.problem.slice(0, indexOfLastValue) +
           "(-" +
-          state.problem.slice(indexOfLastParen + 1);
+          state.problem.slice(indexOfLastValue);
         state.values[state.values.length - 1] = "(-" + state.values.at(-1);
       }
       return {
         ...state,
         answer: evaluateProblem(state, payload.isRadians),
+        hasEvaluated: false,
       };
     case ACTIONS.ADD_CONSTANT:
       // payload is object with symbol and value
@@ -233,7 +243,7 @@ function reducer(state, { type, payload }) {
         state.problem += payload.symbol;
         return {
           ...state,
-          answer: evaluateProblem(state, payload.isRadians),
+          answer: formatProblem(evaluateProblem(state, payload.isRadians)),
         };
       }
       state.values.push(payload.value + "");
@@ -241,7 +251,7 @@ function reducer(state, { type, payload }) {
       return {
         ...state,
         problem: state.problem + " x " + payload.symbol,
-        answer: evaluateProblem(state, payload.isRadians),
+        answer: formatProblem(evaluateProblem(state, payload.isRadians)),
       };
     case ACTIONS.SPECIAL_FUNC:
       // Just clicked equals button, so any special function call
@@ -260,7 +270,7 @@ function reducer(state, { type, payload }) {
         return {
           ...state,
           problem: state.problem + payload.func + "(",
-          answer: evaluateProblem(state, payload.isRadians),
+          answer: formatProblem(evaluateProblem(state, payload.isRadians)),
         };
       }
 
@@ -269,7 +279,7 @@ function reducer(state, { type, payload }) {
       return {
         ...state,
         problem: state.problem + " x " + payload.func + "(",
-        answer: evaluateProblem(state, payload.isRadians),
+        answer: formatProblem(evaluateProblem(state, payload.isRadians)),
       };
     case ACTIONS.INVERSE:
       if (!state.values.at(-1).match(/[0-9]/)) {
@@ -303,9 +313,9 @@ function reducer(state, { type, payload }) {
         state.operations = payload.operations;
         return {
           ...state,
-          problem: payload.problem,
+          problem: payload.problem, // already formatted
           hasEvaluated: false,
-          answer: evaluateProblem(state),
+          answer: formatProblem(evaluateProblem(state)),
         };
       }
       state.values[state.values.length - 1] += payload.values[0]
@@ -315,9 +325,9 @@ function reducer(state, { type, payload }) {
       state.operations = state.operations.concat(payload.operations);
       return {
         ...state,
-        problem: state.problem + payload.problem,
+        problem: formatProblem(state.problem + payload.problem),
         hasEvaluated: false,
-        answer: evaluateProblem(state),
+        answer: formatProblem(evaluateProblem(state)),
       };
     case ACTIONS.SELECT_ANSWER:
       // payload is oldState's answer
@@ -337,15 +347,15 @@ function reducer(state, { type, payload }) {
           ...state,
           hasEvaluated: false,
           problem: newProblem,
-          answer: evaluateProblem(state),
+          answer: formatProblem(evaluateProblem(state)),
         };
       }
       state.values[state.values.length - 1] += newProblem;
       return {
         ...state,
-        problem: state.problem + newProblem,
+        problem: formatProblem(state.problem + newProblem),
         hasEvaluated: false,
-        answer: evaluateProblem(state),
+        answer: formatProblem(evaluateProblem(state)),
       };
     default:
       return state;
@@ -386,8 +396,14 @@ function add_digit(state, payload) {
     return state;
   }
 
-  if (state.values.at(-1) === "0" && payload.digit !== ".") {
-    state.values[state.values.length - 1] = payload.digit;
+  if (
+    state.values.at(-1).includes("0") &&
+    !state.values.at(-1).includes(".") &&
+    payload.digit !== "."
+  ) {
+    state.values[state.values.length - 1] = state.values
+      .at(-1)
+      .replace("0", payload.digit);
     const evaluated = evaluateProblem(state, payload.isRadians);
     return {
       ...state,
@@ -401,8 +417,8 @@ function add_digit(state, payload) {
   const evaluated = evaluateProblem(state, payload.isRadians);
   return {
     ...state,
-    problem: state.problem + payload.digit,
-    answer: evaluated,
+    problem: formatProblem(state.problem + payload.digit),
+    answer: formatProblem(evaluated),
   };
 }
 
@@ -482,10 +498,15 @@ function del_digit(state, payload) {
       .at(-1)
       .slice(0, numLeftParens);
     state.problem = state.problem.slice(0, -2);
+  } else if (state.problem.endsWith(",")) {
+    // we need to delete the comma and the next digit
+    state.values[state.values.length - 1] = state.values.at(-1).slice(0, -1);
+    state.problem = formatProblem(state.problem.slice(0, -2));
   } else {
+    console.log("subaru");
     // else, there was a single digit that we can delete, so delete the digit
     state.values[state.values.length - 1] = state.values.at(-1).slice(0, -1);
-    state.problem = state.problem.slice(0, -1);
+    state.problem = formatProblem(state.problem.slice(0, -1));
   }
 
   // if we deleted the last digit of the term, then display a blank answer
@@ -500,7 +521,7 @@ function del_digit(state, payload) {
   const evaluated = evaluateProblem(state, payload.isRadians);
   return {
     ...state,
-    answer: evaluated,
+    answer: formatProblem(evaluated),
   };
 }
 
@@ -513,7 +534,10 @@ function evaluateProblem(state, isRadians) {
       const answerProblem = state.values[0]
         .replace(/\(/g, "")
         .replace(/\)/g, "");
-      return (answerProblem.match(/[0-9]/) || []).join("") ? answerProblem : "";
+      const result = (answerProblem.match(/[0-9]/) || []).join("")
+        ? answerProblem
+        : "";
+      return result === "-0" ? "0" : result;
     }
     if (state.problem.includes("π")) {
       return Math.PI + "";
@@ -537,6 +561,7 @@ function evaluateProblem(state, isRadians) {
     // We will make sure all the parentheses are closed
     balanceParentheses(finalList, true);
 
+    console.log(finalList);
     // if there are no parentheses then the indicies will be negative or invalid
     [leftParen, rightParen] = [-1, -1];
 
@@ -655,8 +680,13 @@ function evaluateSubSection(
 function evaluate(leftValue, rightValue, operation, isRadians) {
   // when we have sin, just have sin[x] instead of sin(x) or something
   if (typeof rightValue === "undefined") {
-    return leftValue; // in case we evaluate on a list of only one element
+    return leftValue === "-0" ? "0" : leftValue; // in case we evaluate on a list of only one element
   }
+
+  if (rightValue.includes("Error")) {
+    return rightValue;
+  }
+
   if (!rightValue.match(/[0-9]/)) {
     return ""; // we aren't ready to evaluate
   }
@@ -804,7 +834,7 @@ function evaluate(leftValue, rightValue, operation, isRadians) {
   if (answer.endsWith(".")) {
     answer = answer.slice(0, -1);
   }
-  return answer;
+  return answer === "-0" ? "0" : answer;
 }
 
 function App() {
@@ -815,10 +845,24 @@ function App() {
   const [isHistory, setIsHistory] = useState(false);
   let propKey = useRef(0); // for unique keys for history children
 
+  useEffect(() => {
+    console.log(state);
+  });
   return (
     <div className="container">
       <div className="answerScreen">
-        <div className="problem">{state.problem}</div>
+        <div
+          className={
+            "problem" +
+            (state.problem.length >= 30
+              ? " evenShorter"
+              : state.problem.length >= 21
+              ? " shortenedProblem"
+              : "")
+          }
+        >
+          {state.problem}
+        </div>
         <div className="answer">{state.answer}</div>
       </div>
       <div className="touchpad">

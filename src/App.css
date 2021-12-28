@@ -194,3 +194,11 @@ button:focus {
     background-color: var(--yelow);
     color: black
 }
+
+.shortenedProblem {
+    font-size: 1.25rem;
+}
+
+.evenShorter {
+    font-size: 1rem;;
+}
