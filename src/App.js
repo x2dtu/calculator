@@ -859,6 +859,8 @@ function App() {
       if (event.key === "=" || event.key === "Enter") {
         dispatch({ type: ACTIONS.EVALUATE, payload: { isRadians: isRad } });
       } else if (previousKeys.current.at(-1) === "(" && event.key === "-") {
+        // delete the parentheses we just made, then call negate
+        dispatch({ type: ACTIONS.DEL_DIGIT, payload: { isRadians: isRad } });
         dispatch({ type: ACTIONS.NEGATE, payload: { isRadians: isRad } });
       } else if (event.key.match(/[0-9]/)) {
         dispatch({
