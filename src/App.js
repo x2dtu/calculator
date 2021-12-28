@@ -1,5 +1,5 @@
 import { FaBackspace, FaClock } from "react-icons/fa";
-import { useReducer, useState, useEffect, useRef } from "react";
+import { useReducer, useState, useRef } from "react";
 import DigitButton from "./components/DigitButton";
 import OperationButton from "./components/OperationButton";
 import ConstantButton from "./components/ConstantButton";
@@ -814,10 +814,6 @@ function App() {
   const [isRad, setRad] = useState(true);
   const [isHistory, setIsHistory] = useState(false);
   let propKey = useRef(0); // for unique keys for history children
-
-  useEffect(() => {
-    console.log(state);
-  });
 
   return (
     <div className="container">
