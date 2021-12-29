@@ -80,6 +80,7 @@ body {
     padding: 0.5rem;
     margin-top: 0.5rem;
     max-height: 2.3rem;
+    margin-bottom: 0.5rem;
 }
 
 .clearHistory:hover, .pastProblem:hover, .pastAnswer:hover {
@@ -100,7 +101,16 @@ body {
     border-radius: 1rem;
     border: none;
     transition: 1ms ease all;
-    max-height: 2.125rem;
+    /* max-height: 2.125rem; */
+    word-break: break-all;
+}
+
+.pastProblem:hover, .pastAnswer:hover {
+    padding: 0.3rem;
+}
+
+.seperator {
+    margin-top: -1rem;
 }
 
 .pastProblem {

@@ -5,6 +5,7 @@ import OperationButton from "./components/OperationButton";
 import ConstantButton from "./components/ConstantButton";
 import PercAndFactButton from "./components/PercAndFactButton";
 import SpecialFuncButton from "./components/SpecialFuncButton";
+import Seperator from "./components/Seperator";
 import "./app.css";
 
 export const ACTIONS = {
@@ -1325,6 +1326,7 @@ function App() {
           >
             Clear History
           </button>
+          <Seperator />
           {state.history
             .slice()
             .reverse()
@@ -1352,6 +1354,7 @@ function App() {
                 >
                   {pastEval.answer}
                 </button>
+                <Seperator />
               </div>
             ))}
         </div>
