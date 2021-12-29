@@ -1,4 +1,4 @@
-import { FaBackspace, FaClock } from "react-icons/fa";
+import { FaBackspace, FaClock, FaSatelliteDish } from "react-icons/fa";
 import { useReducer, useState, useRef, useEffect } from "react";
 import DigitButton from "./components/DigitButton";
 import OperationButton from "./components/OperationButton";
@@ -63,7 +63,7 @@ function reducer(state, { type, payload }) {
       };
     case ACTIONS.ADD_OPERATION:
       if (
-        (!state.values.at(-1) && state.values.length === 1) ||
+        (!state.values.at(-1).match(/[0-9]/) && state.values.length === 1) ||
         state.values.at(-1).includes("Error")
       ) {
         return state;
@@ -164,11 +164,25 @@ function reducer(state, { type, payload }) {
       };
     case ACTIONS.PARENTHESIS:
       // could do if (payload.isRight)
+      if (
+        state.values.at(-1).endsWith("-") &&
+        !state.values.at(-1).endsWith("(-")
+      ) {
+        state.values[state.values.length - 1] =
+          state.values.at(-1).slice(0, -1) + "(-";
+        return {
+          ...state,
+          problem: state.problem.slice(0, -1) + "(-",
+          hasEvaluated: false,
+        };
+      }
+
       if (!state.values.at(-1).match(/[0-9]/)) {
         state.values[state.values.length - 1] = state.values.at(-1) + "(";
         return {
           ...state,
           problem: state.problem + "(",
+          hasEvaluated: false,
         };
       }
       // ex: (5)
@@ -188,6 +202,7 @@ function reducer(state, { type, payload }) {
         problem: state.problem + ")",
       };
     case ACTIONS.NEGATE:
+      console.log("subaru");
       if (state.values.at(-1).includes("(-")) {
         state.values[state.values.length - 1] = state.values
           .at(-1)
@@ -196,6 +211,19 @@ function reducer(state, { type, payload }) {
         state.problem =
           state.problem.slice(0, lastIndex) +
           state.problem.slice(lastIndex + 2);
+        return {
+          ...state,
+          answer: evaluateProblem(state, payload.isRadians),
+          hasEvaluated: false,
+        };
+      }
+
+      if (state.values.at(-1).startsWith("-")) {
+        state.values[state.values.length - 1] = state.values.at(-1).slice(1);
+        const lastIndex = state.problem.lastIndexOf("-");
+        state.problem =
+          state.problem.slice(0, lastIndex) +
+          state.problem.slice(lastIndex + 1);
         return {
           ...state,
           answer: evaluateProblem(state, payload.isRadians),
@@ -397,7 +425,7 @@ function add_digit(state, payload) {
     return state;
   }
   if (
-    (state.values.at(-1).match(/[0-9.]/) || []).join("") === "0" &&
+    state.values.at(-1).replace(/\(|\)|-/g, "") === "0" &&
     payload.digit !== "."
   ) {
     state.values[state.values.length - 1] = state.values
@@ -444,6 +472,7 @@ function del_digit(state, payload) {
       ...state,
       problem: state.problem.slice(0, -3),
       answer: evaluated,
+      hasEvaluated: false,
     };
   }
 
@@ -512,6 +541,7 @@ function del_digit(state, payload) {
     return {
       ...state,
       answer: "",
+      hasEvaluated: false,
     };
   }
 
@@ -520,6 +550,7 @@ function del_digit(state, payload) {
   return {
     ...state,
     answer: formatProblem(evaluated),
+    hasEvaluated: false,
   };
 }
 
@@ -528,7 +559,7 @@ function evaluateProblem(state, isRadians) {
     if (state.values[0].includes("%") || state.values[0].includes("!")) {
       return evaluate(state.values[0], "0", "+", isRadians);
     }
-    if (state.values[0].includes("-")) {
+    if (state.values[0].includes("-") && !state.values[0].startsWith("-")) {
       const answerProblem = state.values[0]
         .replace(/\(/g, "")
         .replace(/\)/g, "");
@@ -567,6 +598,7 @@ function evaluateProblem(state, isRadians) {
     // We will make sure all the parentheses are closed
     balanceParentheses(finalList, true);
 
+    console.log(finalList);
     // if there are no parentheses then the indicies will be negative or invalid
     [leftParen, rightParen] = [-1, -1];
 
@@ -746,11 +778,11 @@ function evaluate(leftValue, rightValue, operation, isRadians) {
     }
 
     function sin(n) {
-      return isRadians ? Math.sin(n) : Math.sin((n * 180) / Math.PI);
+      return isRadians ? Math.sin(n) : Math.sin((n * Math.PI) / 180);
     }
 
     function cos(n) {
-      return isRadians ? Math.cos(n) : Math.cos((n * 180) / Math.PI);
+      return isRadians ? Math.cos(n) : Math.cos((n * Math.PI) / 180);
     }
 
     switch (leftValue) {
@@ -856,9 +888,18 @@ function App() {
       if (event.key === "Enter") {
         event.preventDefault();
       }
-      if (event.key === "=" || event.key === "Enter") {
+      if (
+        event.key === "-" &&
+        !state.values.at(-1) &&
+        state.values.length === 1
+      ) {
+        dispatch({ type: ACTIONS.NEGATE, payload: { isRadians: isRad } });
+      } else if (event.key === "=" || event.key === "Enter") {
         dispatch({ type: ACTIONS.EVALUATE, payload: { isRadians: isRad } });
-      } else if (previousKeys.current.at(-1) === "(" && event.key === "-") {
+      } else if (
+        (previousKeys.current.at(-1) === "(" && event.key === "-") ||
+        (state.problem.endsWith("(") && event.key === "-")
+      ) {
         // delete the parentheses we just made, then call negate
         dispatch({ type: ACTIONS.DEL_DIGIT, payload: { isRadians: isRad } });
         dispatch({ type: ACTIONS.NEGATE, payload: { isRadians: isRad } });
@@ -869,10 +910,20 @@ function App() {
         });
       } else if (event.key === "Backspace") {
         dispatch({ type: ACTIONS.DEL_DIGIT, payload: { isRadians: isRad } });
-      } else if (event.key.match(/\+|x|-|\/|\^/)) {
+      } else if (event.key.match(/\+|x|-|\^/)) {
         dispatch({
           type: ACTIONS.ADD_OPERATION,
           payload: { operation: event.key },
+        });
+      } else if (event.key === "/") {
+        dispatch({
+          type: ACTIONS.ADD_OPERATION,
+          payload: { operation: "÷" },
+        });
+      } else if (event.key === "*") {
+        dispatch({
+          type: ACTIONS.ADD_OPERATION,
+          payload: { operation: "x" },
         });
       } else if (event.key === "(" || event.key === ")") {
         dispatch({ type: ACTIONS.PARENTHESIS });
@@ -964,7 +1015,9 @@ function App() {
       window.removeEventListener("keydown", onKeyStroke);
       previousKeys.current = [];
     };
-  }, [isRad]);
+  }, [isRad, state.problem]);
+
+  useEffect(() => console.log(state));
 
   return (
     <div className="container">
