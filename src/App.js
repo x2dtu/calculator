@@ -22,6 +22,7 @@ export const ACTIONS = {
   CLEAR_HISTORY: "clear-history",
   SELECT_PROBLEM: "select-problem",
   SELECT_ANSWER: "select-answer",
+  RAD_JUST_CHANGED: "rad-just-changed",
 };
 
 const INIT = {
@@ -239,23 +240,15 @@ function reducer(state, { type, payload }) {
         };
       }
 
-      // ex: "(" will ultimately become "(-"
-      if (state.values.at(-1).endsWith("(")) {
-        state.values[state.values.length - 1] = state.values
-          .at(-1)
-          .slice(0, -1);
-        state.problem = state.problem.slice(0, -1);
-      }
-
       const lastIndexValue = state.values.at(-1).lastIndexOf("(");
       if (lastIndexValue !== -1) {
         state.values[state.values.length - 1] =
-          state.values.at(-1).slice(0, lastIndexValue + 1) +
+          state.values.at(-1).slice(0, lastIndexValue) +
           "(-" +
           state.values.at(-1).slice(lastIndexValue + 1);
         const lastIndexProblem = state.problem.lastIndexOf("(");
         state.problem =
-          state.problem.slice(0, lastIndexProblem + 1) +
+          state.problem.slice(0, lastIndexProblem) +
           "(-" +
           state.problem.slice(lastIndexProblem + 1);
       } else {
@@ -303,7 +296,7 @@ function reducer(state, { type, payload }) {
       // Just clicked equals button, so any special function call
       // should clear the calculator and start new calculation with
       // with special function
-      if (state.hasEvaluated) {
+      if (state.hasEvaluated || state.problem.includes("Error")) {
         state.hasEvaluated = false;
         state.problem = "";
         state.values = [""];
@@ -350,30 +343,30 @@ function reducer(state, { type, payload }) {
         history: [],
       };
     case ACTIONS.SELECT_PROBLEM:
-      // payload is oldState
+      // payload is oldState, isRadians
 
       // if problem ends with numeric digit, clear the problem
       // and start a new one with oldState's answer
       if (state.problem.slice(-1).match(/[0-9]/)) {
-        state.values = payload.values;
-        state.operations = payload.operations;
+        state.values = payload.oldState.values;
+        state.operations = payload.oldState.operations;
         return {
           ...state,
-          problem: payload.problem, // already formatted
+          problem: payload.oldState.problem, // already formatted
           hasEvaluated: false,
-          answer: formatProblem(evaluateProblem(state)),
+          answer: formatProblem(evaluateProblem(state, payload.isRadians)),
         };
       }
-      state.values[state.values.length - 1] += payload.values[0]
-        ? payload.values[0]
+      state.values[state.values.length - 1] += payload.oldState.values[0]
+        ? payload.oldState.values[0]
         : "";
-      state.values = state.values.concat(payload.values.slice(1));
-      state.operations = state.operations.concat(payload.operations);
+      state.values = state.values.concat(payload.oldState.values.slice(1));
+      state.operations = state.operations.concat(payload.oldState.operations);
       return {
         ...state,
-        problem: formatProblem(state.problem + payload.problem),
+        problem: formatProblem(state.problem + payload.oldState.problem),
         hasEvaluated: false,
-        answer: formatProblem(evaluateProblem(state)),
+        answer: formatProblem(evaluateProblem(state, payload.isRadians)),
       };
     case ACTIONS.SELECT_ANSWER:
       // payload is oldState's answer
@@ -393,7 +386,7 @@ function reducer(state, { type, payload }) {
           ...state,
           hasEvaluated: false,
           problem: newProblem,
-          answer: formatProblem(evaluateProblem(state)),
+          answer: formatProblem(evaluateProblem(state, payload.isRadians)),
         };
       }
       state.values[state.values.length - 1] += newProblem;
@@ -401,7 +394,12 @@ function reducer(state, { type, payload }) {
         ...state,
         problem: formatProblem(state.problem + newProblem),
         hasEvaluated: false,
-        answer: formatProblem(evaluateProblem(state)),
+        answer: formatProblem(evaluateProblem(state, payload.isRadians)),
+      };
+    case ACTIONS.RAD_JUST_CHANGED:
+      return {
+        ...state,
+        answer: formatProblem(evaluateProblem(state, !payload.isRadians)),
       };
     default:
       return state;
@@ -411,7 +409,7 @@ function reducer(state, { type, payload }) {
 function add_digit(state, payload) {
   // Just clicked equals button, so any add digit operation should clear the
   // calculator and start new calculation with payload digit.
-  if (state.hasEvaluated) {
+  if (state.hasEvaluated || state.problem.includes("Error")) {
     state.hasEvaluated = false;
     state.problem = "";
     state.values = [""];
@@ -431,7 +429,7 @@ function add_digit(state, payload) {
   }
 
   if (!state.values.at(-1).match(/[0-9]/) && payload.digit === ".") {
-    state.values[state.values.length - 1] = "0.";
+    state.values[state.values.length - 1] = state.values.at(-1) + "0.";
     return {
       ...state,
       problem: state.problem + "0.",
@@ -867,7 +865,7 @@ function evaluate(leftValue, rightValue, operation, isRadians) {
         break;
       case "÷":
         if (right === 0) {
-          return "Error (Divide By Zero)";
+          return "Error (Division By Zero)";
         }
         result = left / right;
         break;
@@ -896,8 +894,8 @@ function App() {
   const [is3rd, set3rd] = useState(false);
   const [isRad, setRad] = useState(true);
   const [isHistory, setIsHistory] = useState(false);
-  let propKey = useRef(0); // for unique keys for history children
-  let previousKeys = useRef([]);
+  const propKey = useRef(0); // for unique keys for history prop children
+  const previousKeys = useRef([]);
 
   useEffect(() => {
     const onKeyStroke = (event) => {
@@ -919,7 +917,7 @@ function App() {
         // delete the parentheses we just made, then call negate
         dispatch({ type: ACTIONS.DEL_DIGIT, payload: { isRadians: isRad } });
         dispatch({ type: ACTIONS.NEGATE, payload: { isRadians: isRad } });
-      } else if (event.key.match(/[0-9]/)) {
+      } else if (event.key.match(/[0-9.]/)) {
         dispatch({
           type: ACTIONS.ADD_DIGIT,
           payload: { digit: event.key, isRadians: isRad },
@@ -1026,7 +1024,6 @@ function App() {
     };
 
     window.addEventListener("keydown", onKeyStroke);
-
     return () => {
       window.removeEventListener("keydown", onKeyStroke);
       previousKeys.current = [];
@@ -1090,7 +1087,16 @@ function App() {
           <>
             {is2nd ? (
               <>
-                <button id="rad" onClick={() => setRad(!isRad)}>
+                <button
+                  id="rad"
+                  onClick={() => {
+                    setRad(!isRad);
+                    dispatch({
+                      type: ACTIONS.RAD_JUST_CHANGED,
+                      payload: { isRadians: isRad },
+                    });
+                  }}
+                >
                   {isRad ? (
                     <>
                       <p className="mode">mode:</p>
@@ -1329,7 +1335,7 @@ function App() {
                   onClick={() =>
                     dispatch({
                       type: ACTIONS.SELECT_PROBLEM,
-                      payload: pastEval,
+                      payload: { oldState: pastEval, isRadians: isRad },
                     })
                   }
                 >
@@ -1340,7 +1346,7 @@ function App() {
                   onClick={() =>
                     dispatch({
                       type: ACTIONS.SELECT_ANSWER,
-                      payload: { answer: pastEval.answer },
+                      payload: { answer: pastEval.answer, isRadians: isRad },
                     })
                   }
                 >
