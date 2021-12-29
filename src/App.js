@@ -348,7 +348,7 @@ function reducer(state, { type, payload }) {
 
       // if problem ends with numeric digit, clear the problem
       // and start a new one with oldState's answer
-      if (state.problem.slice(-1).match(/[0-9]/)) {
+      if (state.problem.slice(-1).match(/[0-9.)]/)) {
         state.values = payload.oldState.values;
         state.operations = payload.oldState.operations;
         return {
@@ -380,7 +380,7 @@ function reducer(state, { type, payload }) {
       // we don't care about evaluateProblem second parameter isRadians
       // since the answer can't have a function like a trig function, only
       // a numeric answer
-      if (state.problem.slice(-1).match(/[0-9]/)) {
+      if (state.problem.slice(-1).match(/[0-9.)]/)) {
         state.values = [newProblem];
         state.operations = [];
         return {
@@ -874,7 +874,17 @@ function evaluate(leftValue, rightValue, operation, isRadians) {
         result = left * right;
         break;
       case "^":
-        result = left ** right;
+        console.log(left, right);
+        console.log(1 / right);
+        console.log((1 / right) % 2 === 1);
+        if (left < 0 && Math.abs(right) < 1 && (1 / right) % 2 !== 0) {
+          result = -((-1 * left) ** right);
+        } else {
+          result = left ** right;
+        }
+        if (Number.isNaN(result)) {
+          return "Error (Imaginary Result)";
+        }
         break;
       default:
         return "Error";
@@ -1031,6 +1041,7 @@ function App() {
     };
   }, [isRad, state.problem, state.values]);
 
+  useEffect(() => console.log(state));
   return (
     <div className="container">
       <div className="answerScreen">
@@ -1331,29 +1342,31 @@ function App() {
             .slice()
             .reverse()
             .map((pastEval) => (
-              <div className="pastContainer" key={propKey.current++}>
-                <button
-                  className="pastProblem"
-                  onClick={() =>
-                    dispatch({
-                      type: ACTIONS.SELECT_PROBLEM,
-                      payload: { oldState: pastEval, isRadians: isRad },
-                    })
-                  }
-                >
-                  {pastEval.problem}
-                </button>
-                <button
-                  className="pastAnswer"
-                  onClick={() =>
-                    dispatch({
-                      type: ACTIONS.SELECT_ANSWER,
-                      payload: { answer: pastEval.answer, isRadians: isRad },
-                    })
-                  }
-                >
-                  {pastEval.answer}
-                </button>
+              <div key={propKey.current++}>
+                <div className="pastContainer">
+                  <button
+                    className="pastProblem"
+                    onClick={() =>
+                      dispatch({
+                        type: ACTIONS.SELECT_PROBLEM,
+                        payload: { oldState: pastEval, isRadians: isRad },
+                      })
+                    }
+                  >
+                    {pastEval.problem}
+                  </button>
+                  <button
+                    className="pastAnswer"
+                    onClick={() =>
+                      dispatch({
+                        type: ACTIONS.SELECT_ANSWER,
+                        payload: { answer: pastEval.answer, isRadians: isRad },
+                      })
+                    }
+                  >
+                    {pastEval.answer}
+                  </button>
+                </div>
                 <Seperator />
               </div>
             ))}
