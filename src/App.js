@@ -65,7 +65,7 @@ function reducer(state, { type, payload }) {
       };
     case ACTIONS.ADD_OPERATION:
       if (
-        (!state.values.at(-1).match(/[0-9]/) && state.values.length === 1) ||
+        !state.values.at(-1).match(/[0-9]/) ||
         state.values.at(-1).includes("Error")
       ) {
         return state;
@@ -157,10 +157,10 @@ function reducer(state, { type, payload }) {
         return state;
       }
       state.values[state.values.length - 1] += payload.operation;
+      state.problem = state.problem + payload.operation;
       const evaluated = evaluateProblem(state, payload.isRadians);
       return {
         ...state,
-        problem: state.problem + payload.operation,
         answer: formatProblem(evaluated),
         hasEvaluated: false,
       };
@@ -213,6 +213,14 @@ function reducer(state, { type, payload }) {
         problem: state.problem + ")",
       };
     case ACTIONS.NEGATE:
+      // if we have ( on the keyboard and type "-", then delete the "("
+      if (payload.keyboard) {
+        state.values[state.values.length - 1] = state.values
+          .at(-1)
+          .slice(0, -1);
+        state.problem = state.problem.slice(0, -1);
+      }
+
       if (state.values.at(-1).includes("(-")) {
         state.values[state.values.length - 1] = state.values
           .at(-1)
@@ -288,9 +296,9 @@ function reducer(state, { type, payload }) {
       }
       state.values.push(payload.value + "");
       state.operations.push("x");
+      state.problem = state.problem + " x " + payload.symbol;
       return {
         ...state,
-        problem: state.problem + " x " + payload.symbol,
         answer: formatProblem(evaluateProblem(state, payload.isRadians)),
       };
     case ACTIONS.SPECIAL_FUNC:
@@ -303,22 +311,30 @@ function reducer(state, { type, payload }) {
         state.values = [""];
       }
 
+      // make "-" turn to "-1 x "
+      if (state.values.at(-1).endsWith("-")) {
+        state.values[state.values.length - 1] += "1";
+        state.operations.push("x");
+        state.values.push("");
+        state.problem += "1 x ";
+      }
+
       if (!state.values.at(-1).match(/[0-9]/)) {
         state.values[state.values.length - 1] += payload.func;
         state.operations.push("/");
         state.values.push("(");
+        state.problem = state.problem + payload.func + "(";
         return {
           ...state,
-          problem: state.problem + payload.func + "(",
           answer: formatProblem(evaluateProblem(state, payload.isRadians)),
         };
       }
 
       state.values = state.values.concat([payload.func, "("]);
       state.operations = state.operations.concat(["x", "/"]);
+      state.problem = state.problem + " x " + payload.func + "(";
       return {
         ...state,
-        problem: state.problem + " x " + payload.func + "(",
         answer: formatProblem(evaluateProblem(state, payload.isRadians)),
       };
     case ACTIONS.INVERSE:
@@ -348,12 +364,12 @@ function reducer(state, { type, payload }) {
 
       // if problem ends with numeric digit, clear the problem
       // and start a new one with oldState's answer
-      if (state.problem.slice(-1).match(/[0-9.)]/)) {
+      if (state.problem.slice(-1).match(/[0-9.)eπ]/)) {
         state.values = payload.oldState.values;
         state.operations = payload.oldState.operations;
+        state.problem = payload.oldState.problem; // already formatted
         return {
           ...state,
-          problem: payload.oldState.problem, // already formatted
           hasEvaluated: false,
           answer: formatProblem(evaluateProblem(state, payload.isRadians)),
         };
@@ -363,9 +379,9 @@ function reducer(state, { type, payload }) {
         : "";
       state.values = state.values.concat(payload.oldState.values.slice(1));
       state.operations = state.operations.concat(payload.oldState.operations);
+      state.problem = formatProblem(state.problem + payload.oldState.problem);
       return {
         ...state,
-        problem: formatProblem(state.problem + payload.oldState.problem),
         hasEvaluated: false,
         answer: formatProblem(evaluateProblem(state, payload.isRadians)),
       };
@@ -380,20 +396,20 @@ function reducer(state, { type, payload }) {
       // we don't care about evaluateProblem second parameter isRadians
       // since the answer can't have a function like a trig function, only
       // a numeric answer
-      if (state.problem.slice(-1).match(/[0-9.)]/)) {
+      if (state.problem.slice(-1).match(/[0-9.)eπ]/)) {
         state.values = [newProblem];
         state.operations = [];
+        state.problem = newProblem;
         return {
           ...state,
           hasEvaluated: false,
-          problem: newProblem,
           answer: formatProblem(evaluateProblem(state, payload.isRadians)),
         };
       }
       state.values[state.values.length - 1] += newProblem;
+      state.problem = formatProblem(state.problem + newProblem);
       return {
         ...state,
-        problem: formatProblem(state.problem + newProblem),
         hasEvaluated: false,
         answer: formatProblem(evaluateProblem(state, payload.isRadians)),
       };
@@ -414,6 +430,12 @@ function add_digit(state, payload) {
     state.hasEvaluated = false;
     state.problem = "";
     state.values = [""];
+  }
+
+  if (state.problem.endsWith(")")) {
+    state.values.push("");
+    state.operations.push("x");
+    state.problem += " x ";
   }
 
   const problemNoEndingParen = state.problem.replace(/\)+$/, "");
@@ -447,20 +469,20 @@ function add_digit(state, payload) {
     state.values[state.values.length - 1] = state.values
       .at(-1)
       .replace("0", payload.digit);
-    const evaluated = evaluateProblem(state, payload.isRadians);
+    state.problem = state.problem.slice(0, -1) + payload.digit;
+    const evaluated = formatProblem(evaluateProblem(state, payload.isRadians));
     return {
       ...state,
-      problem: state.problem.slice(0, -1) + payload.digit,
       answer: evaluated,
     };
   }
 
   // default case
   state.values[state.values.length - 1] += payload.digit;
+  state.problem = formatProblem(state.problem + payload.digit);
   const evaluated = evaluateProblem(state, payload.isRadians);
   return {
     ...state,
-    problem: formatProblem(state.problem + payload.digit),
     answer: formatProblem(evaluated),
   };
 }
@@ -483,19 +505,19 @@ function del_digit(state, payload) {
     // else looks something like "5 + "
     state.values.pop();
     state.operations.pop();
+    state.problem = state.problem.slice(0, -3);
     const evaluated = evaluateProblem(state, payload.isRadians);
     return {
       ...state,
-      problem: state.problem.slice(0, -3),
-      answer: evaluated,
+      answer: formatProblem(evaluated),
       hasEvaluated: false,
     };
   }
 
-  function countLeftParens(string) {
+  function countLeftParensAndNeg(string) {
     let count = 0;
     for (let char of string) {
-      if (char !== "(") {
+      if (char !== "(" && char !== "-") {
         return count;
       }
       count++;
@@ -507,7 +529,7 @@ function del_digit(state, payload) {
 
   // if we are deleting a constant, we must delete the entire constant value
   if (state.problem.endsWith("π") || state.problem.endsWith("e")) {
-    const numLeftParens = countLeftParens(state.values.at(-1));
+    const numLeftParens = countLeftParensAndNeg(state.values.at(-1));
     state.values[state.values.length - 1] = state.values
       .at(-1)
       .slice(0, numLeftParens);
@@ -517,30 +539,21 @@ function del_digit(state, payload) {
     state.values.pop(); // pop off the left parenthesis
     // pop off the "/" special operation since we are deleting the special function
     state.operations.pop();
-    const numLeftParens = countLeftParens(state.values.at(-1));
-    state.values[state.values.length - 1] = state.values
-      .at(-1)
-      .slice(0, numLeftParens);
+    state.values[state.values.length - 1] = state.values.at(-1).slice(0, -3);
     state.problem = state.problem.slice(0, -4);
   } else if (state.problem.endsWith("ln(")) {
     // we are deleting the two letter ln function (with the left parentheses)
     state.values.pop(); // pop off the left parenthesis
     // pop off the "/" special operation since we are deleting the special function
     state.operations.pop();
-    const numLeftParens = countLeftParens(state.values.at(-1));
-    state.values[state.values.length - 1] = state.values
-      .at(-1)
-      .slice(0, numLeftParens);
+    state.values[state.values.length - 1] = state.values.at(-1).slice(0, -2);
     state.problem = state.problem.slice(0, -3);
   } else if (state.problem.endsWith("√(")) {
     // we are deleting the one letter √ function (with the left parentheses)
     state.values.pop(); // pop off the left parenthesis
     // pop off the "/" special operation since we are deleting the special function
     state.operations.pop();
-    const numLeftParens = countLeftParens(state.values.at(-1));
-    state.values[state.values.length - 1] = state.values
-      .at(-1)
-      .slice(0, numLeftParens);
+    state.values[state.values.length - 1] = state.values.at(-1).slice(0, -1);
     state.problem = state.problem.slice(0, -2);
   } else if (state.problem.endsWith(",")) {
     // we need to delete the comma and the next digit
@@ -874,9 +887,6 @@ function evaluate(leftValue, rightValue, operation, isRadians) {
         result = left * right;
         break;
       case "^":
-        console.log(left, right);
-        console.log(1 / right);
-        console.log((1 / right) % 2 === 1);
         if (left < 0 && Math.abs(right) < 1 && (1 / right) % 2 !== 0) {
           result = -((-1 * left) ** right);
         } else {
@@ -926,8 +936,10 @@ function App() {
         (state.problem.endsWith("(") && event.key === "-")
       ) {
         // delete the parentheses we just made, then call negate
-        dispatch({ type: ACTIONS.DEL_DIGIT, payload: { isRadians: isRad } });
-        dispatch({ type: ACTIONS.NEGATE, payload: { isRadians: isRad } });
+        dispatch({
+          type: ACTIONS.NEGATE,
+          payload: { isRadians: isRad, keyboard: true },
+        });
       } else if (event.key.match(/[0-9.]/)) {
         dispatch({
           type: ACTIONS.ADD_DIGIT,
