@@ -1,4 +1,4 @@
-import { FaBackspace, FaClock, FaSatelliteDish } from "react-icons/fa";
+import { FaBackspace, FaClock } from "react-icons/fa";
 import { useReducer, useState, useRef, useEffect } from "react";
 import DigitButton from "./components/DigitButton";
 import OperationButton from "./components/OperationButton";
@@ -177,6 +177,14 @@ function reducer(state, { type, payload }) {
         };
       }
 
+      // ex. adding "(" to "(-" yields "(-1 x (" instead of "(-("
+      if (state.values.at(-1).endsWith("(-")) {
+        state.values[state.values.length - 1] += "1";
+        state.operations.push("x");
+        state.values.push("");
+        state.problem += "1 x ";
+      }
+
       if (!state.values.at(-1).match(/[0-9]/)) {
         state.values[state.values.length - 1] = state.values.at(-1) + "(";
         return {
@@ -193,6 +201,7 @@ function reducer(state, { type, payload }) {
           values: state.values.concat("("),
           problem: state.problem + " x (",
           hasEvaluated: false,
+          answer: "",
         };
       }
       // ex: (5
@@ -202,7 +211,6 @@ function reducer(state, { type, payload }) {
         problem: state.problem + ")",
       };
     case ACTIONS.NEGATE:
-      console.log("subaru");
       if (state.values.at(-1).includes("(-")) {
         state.values[state.values.length - 1] = state.values
           .at(-1)
@@ -230,6 +238,15 @@ function reducer(state, { type, payload }) {
           hasEvaluated: false,
         };
       }
+
+      // ex: "(" will ultimately become "(-"
+      if (state.values.at(-1).endsWith("(")) {
+        state.values[state.values.length - 1] = state.values
+          .at(-1)
+          .slice(0, -1);
+        state.problem = state.problem.slice(0, -1);
+      }
+
       const lastIndexValue = state.values.at(-1).lastIndexOf("(");
       if (lastIndexValue !== -1) {
         state.values[state.values.length - 1] =
@@ -598,7 +615,6 @@ function evaluateProblem(state, isRadians) {
     // We will make sure all the parentheses are closed
     balanceParentheses(finalList, true);
 
-    console.log(finalList);
     // if there are no parentheses then the indicies will be negative or invalid
     [leftParen, rightParen] = [-1, -1];
 
@@ -1015,9 +1031,7 @@ function App() {
       window.removeEventListener("keydown", onKeyStroke);
       previousKeys.current = [];
     };
-  }, [isRad, state.problem]);
-
-  useEffect(() => console.log(state));
+  }, [isRad, state.problem, state.values]);
 
   return (
     <div className="container">
