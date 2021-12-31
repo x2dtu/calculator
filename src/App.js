@@ -1053,7 +1053,6 @@ function App() {
     };
   }, [isRad, state.problem, state.values]);
 
-  useEffect(() => console.log(state));
   return (
     <div className="container">
       <div className="answerScreen">
