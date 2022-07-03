@@ -1,70 +1,28 @@
-# Getting Started with Create React App
+# Calculator
+This calculator was made using react and was my first react project. I was inspired to include as many features of my scientific calculator in this react calculator and had a lot of fun working on this. Please email me at 3069391@gmail.com or comment on this project page should you have any questions about the calculator, suggestions for further improvement, or have found any bugs.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Screenshots
+![image](https://user-images.githubusercontent.com/82241006/177057536-4c54233d-276f-4063-b547-b5479f73e0e9.png)
+<br>
+<br>
+![image](https://user-images.githubusercontent.com/82241006/177057572-75338c28-6771-4543-a8e4-849ae043fae6.png)
+<br>
+<br>
+![image](https://user-images.githubusercontent.com/82241006/177057602-11c6aebe-1466-4619-8244-3fa5b3342389.png)
+<br>
+<br>
+![image](https://user-images.githubusercontent.com/82241006/177057637-2f8938d4-06ef-41d1-b3ca-6368b5486d92.png)
+<br>
+<br>
+![image](https://user-images.githubusercontent.com/82241006/177057674-58dae9e2-e19b-451b-b121-5c1a82d1f14c.png)
 
-## Available Scripts
+## Setup Instructions
+1. First, download the source code, either by executing a `git clone https://github.com/x2dtu/calculator.git` in a terminal or downloading the project as a zip through the Github page and extracting that zip.
+2. This project uses npm and node to run, so make sure to have both installed on your computer before you try to run this. <br>
+In a terminal at the project directory,
+3. Run `npm install` to install the necessary packages.
+4. Run `npm start` to start the app. Enjoy!
 
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Controls and Features
+You can either use your mouse to click the calculator buttons or use your keyboard to type expressions. The keyboard can even be used for advanced expressions (ie. type *sqrt* to make a square root, or *sin* for sine, or *!* for a factorial, etc.). <br>
+This calculator follows all the rules of PEMDAS, so you can create complex expressions with multiple groupings of parentheses without worry. There is support for trigonometric functions too like sine, cosine, and tangent, and you can choose whether or not the inputs to these functions are radians or degrees. You can either use pi or e as constants, and there are log and ln functions for your logarithmic desires. Errors like dividing by 0, negative square roots or nonpositive logarithms and many others result in detailed error messages that explain what caused the error. The calculator records all your past calculations and their answers, so if you need an old expression or answer, simply click the history button and select whichever expression or answer you want. You can even append past answers or expressions to your current calculation. You can negate any expression, take a fraction of it, or clear it all by with the clear button just like a normal calculator too. Check this project out to see some of its other features; I hope you will like it!
