@@ -2,7 +2,7 @@
 This calculator was made using react and was my first react project. I was inspired to include as many features of my scientific calculator in this react calculator and had a lot of fun working on this. Please email me at 3069391@gmail.com or comment on this project page should you have any questions about the calculator, suggestions for further improvement, or have found any bugs.
 
 ## Screenshots
-![image](https://user-images.githubusercontent.com/82241006/177057536-4c54233d-276f-4063-b547-b5479f73e0e9.png|width=300)
+![image](https://user-images.githubusercontent.com/82241006/177057536-4c54233d-276f-4063-b547-b5479f73e0e9.png | width=300)
 <br>
 <br>
 ![image](https://user-images.githubusercontent.com/82241006/177057572-75338c28-6771-4543-a8e4-849ae043fae6.png)
