@@ -3,11 +3,11 @@ This calculator was made using react and was my first react project. I was inspi
 
 ## Screenshots
 <div style="display: flex">
-<img src="https://user-images.githubusercontent.com/82241006/177057536-4c54233d-276f-4063-b547-b5479f73e0e9.png" alt="PEMDAS" width="500" />
-<img src="https://user-images.githubusercontent.com/82241006/177057572-75338c28-6771-4543-a8e4-849ae043fae6.png" alt="2nd trig features" width="500" />
-<img src="https://user-images.githubusercontent.com/82241006/177057602-11c6aebe-1466-4619-8244-3fa5b3342389.png" alt="3rd logarithmic and extraneous features" width="500" />
-<img src="https://user-images.githubusercontent.com/82241006/177057637-2f8938d4-06ef-41d1-b3ca-6368b5486d92.png" alt="Calculation history page" width="500" />
-<img src="https://user-images.githubusercontent.com/82241006/177057674-58dae9e2-e19b-451b-b121-5c1a82d1f14c.png" alt="Using past expression" width="500" />
+<img src="https://user-images.githubusercontent.com/82241006/177057536-4c54233d-276f-4063-b547-b5479f73e0e9.png" alt="PEMDAS" width="400" />
+<img src="https://user-images.githubusercontent.com/82241006/177057572-75338c28-6771-4543-a8e4-849ae043fae6.png" alt="2nd trig features" width="400" />
+<img src="https://user-images.githubusercontent.com/82241006/177057602-11c6aebe-1466-4619-8244-3fa5b3342389.png" alt="3rd logarithmic and extraneous features" width="400" />
+<img src="https://user-images.githubusercontent.com/82241006/177057637-2f8938d4-06ef-41d1-b3ca-6368b5486d92.png" alt="Calculation history page" width="400" />
+<img src="https://user-images.githubusercontent.com/82241006/177057674-58dae9e2-e19b-451b-b121-5c1a82d1f14c.png" alt="Using past expression" width="400" />
 </div>
 
 ## Setup Instructions
